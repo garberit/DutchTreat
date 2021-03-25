@@ -1,0 +1,49 @@
+﻿
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Dutch Treat: @ViewBag.Title</title>
+	<link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+	<link href="~/lib/fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet" />
+
+	<link href="~/css/site.css" rel="stylesheet" />
+</head>
+<body>
+
+<div class="row">
+<header class="container-fluid">
+<nav class="navbar navbar-dark bg-dark navbar-expand-md">
+	<h1 class="navbar-brand"><i class="fas fa-paint-brush"></i> Welcome to Dutch Treat</h1>
+	<button class="navbar-toggler" data-toggle="collapse" data-target="#theMenu">
+	 <span class="navbar-toggler-icon"></span>
+ </button>
+
+	<div id="theMenu" class="navbar-collapse collapse">
+		<ul class="navbar-nav">
+			<li class="nav-item"><a class="nav-link" asp-controller="App" asp-action="Index">Home</a></li>
+			<li class="nav-item"><a class="nav-link" asp-controller="App" asp-action="Contact">Contact</a></li>
+			<li class="nav-item"><a class="nav-link" asp-controller="App" asp-action="About">About</a></li>
+		</ul>
+ </div>
+
+</nav>
+</header>	
+</div>
+	<section class="container">
+	<h2 class="text-center">@ViewBag.Title</h2>
+	@RenderBody()
+</section>
+	<footer class="container">
+	<div class="text-center">Copyright 2021 DT LLC</div>
+</footer>
+	
+
+
+	<script src="~/lib/jquery/dist/jquery.min.js"></script>
+	<script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+	<script src="~/js/index.js"></script>
+
+	@RenderSection("Scripts", false)
+
+</body>
+</html>
