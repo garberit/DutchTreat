@@ -1,101 +1,101 @@
-using DutchTreat.Data;
-using DutchTreat.Services;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
+using DutchTreat.Data;
+using DutchTreat.Data.Entities;
+using DutchTreat.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 
 namespace DutchTreat
 {
-	public class Startup
-	{
-		public Startup(IConfiguration configuration)
-		{
-			Configuration = configuration;
-		}
+    public class Startup
+    {
+        private readonly IConfiguration _config;
 
-		public IConfiguration Configuration { get; }
+        public Startup(IConfiguration config)
+        {
+            _config = config;
+        }
 
-		// This method gets called by the runtime. Use this method to add services to the container.
-		public void ConfigureServices(IServiceCollection services)
-		{
-			services.AddDbContext<DutchContext>(cfg => {
-				cfg.UseSqlServer(Configuration.GetConnectionString("DutchContextDb"));
-			});
+        // This method gets called by the runtime. Use this method to add services to the container.
+        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddIdentity<StoreUser, IdentityRole>(cfg =>
+            {
+                cfg.User.RequireUniqueEmail = true;
+            })
+              .AddEntityFrameworkStores<DutchContext>();
+            
+            services.AddAuthentication()
+              .AddCookie()
+              .AddJwtBearer(cfg =>
+              {
+                  cfg.TokenValidationParameters = new TokenValidationParameters()
+                  {
+                      ValidIssuer = _config["Tokens:Issuer"],
+                      ValidAudience = _config["Tokens:Audience"],
+                      IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]))
+                  };
+              });
 
-			services.AddTransient<IMailService, NullMailService>();
+            services.AddDbContext<DutchContext>();
+            services.AddTransient<IMailService, NullMailService>();
 
-			services.AddTransient<DutchSeeder>();
+            services.AddTransient<DutchSeeder>();
 
-			services.AddAutoMapper(Assembly.GetExecutingAssembly());
+            services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
-			services.AddScoped<IDutchRepository, DutchRepository>();
+            services.AddScoped<IDutchRepository, DutchRepository>();
 
-			services.AddMvc();
+            services.AddControllersWithViews()
+              .AddRazorRuntimeCompilation()
+              .AddNewtonsoftJson(cfg => cfg.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore);
 
-			services.AddControllersWithViews()
-				.AddRazorRuntimeCompilation()
-				.AddNewtonsoftJson(cfg => cfg.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+            services.AddRazorPages();
+        }
 
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+            else
+            {
+                // Add Error Page
+                app.UseExceptionHandler("/error");
+            }
 
-			services.AddRazorPages();
-		}
+            app.UseStaticFiles();
 
-		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-		{
+            app.UseRouting();
 
-			if (env.IsDevelopment())
-			{
-				app.UseDeveloperExceptionPage();
-			}
-			else
-			{
-				app.UseExceptionHandler("/error");
-			}
-			
-			//app.UseDefaultFiles();
-			app.UseStaticFiles();
+            app.UseAuthentication();
+            app.UseAuthorization();
 
-			app.UseRouting();
-			app.UseEndpoints(cfg =>
-			{
-				cfg.MapRazorPages();
-				cfg.MapControllerRoute("Default",
-					"/{controller}/{action}/{id?}",
-					new { controller = "App", action = "Index" });
-			});
+            app.UseEndpoints(cfg =>
+            {
+                cfg.MapControllerRoute("Fallback",
+                  "{controller}/{action}/{id?}",
+                  new { controller = "App", action = "Index" });
 
-			#region OldCommented
-			//if (env.IsDevelopment())
-			//{
-			//	app.UseDeveloperExceptionPage();
-			//}
-			//else
-			//{
-			//	app.UseExceptionHandler("/Error");
-			//}
-
-			//app.UseStaticFiles();
-
-			//app.UseRouting();
-
-			//app.UseAuthorization();
-
-			//app.UseEndpoints(endpoints =>
-			//{
-			//	endpoints.MapRazorPages();
-			//});
-			#endregion
-
-		}
-	}
+                cfg.MapRazorPages();
+            });
+        }
+    }
 }
