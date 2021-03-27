@@ -1,0 +1,9 @@
+﻿.product-image {
+	border: 1px #808080 solid;
+	box-shadow: #0000ff 2px 2px ;
+	margin: 2px;
+}
+
+.products-props {
+	font-size: .9rem;
+}
