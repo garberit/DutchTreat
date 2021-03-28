@@ -53,7 +53,6 @@ namespace DutchTreat.Controllers
             return View();
         }
 
-        [Authorize]
         public IActionResult Shop()
 		{
             //ViewBag.Title = "Shop";
